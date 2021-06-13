@@ -1,5 +1,5 @@
 import json
-from utils import get_best_price, is_well_formed_url, write_json
+from utils import get_best_price, is_well_formed_url, write_json, order_dict_by
 import sys
 
 def read_json(filename):
@@ -29,4 +29,5 @@ def process_dict(games_dict):
 def update_json(filename):
     games_dict = read_json(filename)
     process_dict(games_dict)
-    write_json(games_dict, filename)
+    ordered_dict = order_dict_by(games_dict, 'price')
+    write_json(ordered_dict, filename)

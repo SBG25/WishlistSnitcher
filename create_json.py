@@ -1,9 +1,7 @@
-import json
 import re
 import requests
-from collections import OrderedDict
-from operator import getitem
-from utils import get_best_price, is_well_formed_url, write_json
+from utils import get_best_price, is_well_formed_url, write_json, order_dict_by
+import sys
 
 URL = "https://store.steampowered.com/wishlist/profiles/{user_id}/wishlistdata/?p={page}"
 URL_GAME = "https://gocdkeys.com/en/buy-{game_name}-pc-cd-key"
@@ -32,30 +30,42 @@ def generate_dict_row(data, key):
 
     return name, row
 
-def process_page(url_json, games_dict):
-    data = requests.get(url_json).json()
+def process_dict(games_dict):
+    total_games = len(games_dict.keys())
+    updated_games = 1
+
+    result_dict = dict()
+
+    for key in games_dict.keys():
+        name, row = generate_dict_row(games_dict, key)
+        result_dict[name] = row
+
+        sys.stdout.write("\r{current}/{total}".replace("{current}", str(updated_games)).replace("{total}", str(total_games)))
+        sys.stdout.flush()
+        updated_games += 1
+
+    return result_dict
+
+def process_pages(url_json):
+    page = 0
+    data = requests.get(url_json.replace("{page}", str(page))).json()
     if(data == {'success':2}):
         raise Exception("Invalid Steam user id.")
+    games_dict = dict(data)
+    
+    page += 1
+    while data:
+        data = requests.get(url_json.replace("{page}", str(page))).json()
+        games_dict.update(dict(data))
+        page += 1
+    return games_dict
 
-    if(not data):
-        return None
-    else:
-        for key in data.keys():
-            name, row = generate_dict_row(data, key)
-            games_dict[name] = row
-        return True
-
-def order_dict_by(dict_games, field):
-    ordered_dict = OrderedDict(sorted(dict_games.items(), key = lambda x: getitem(x[1], field)))
-    return ordered_dict
 
 def generate_json(id_user, filename):
-    games_dict = dict()
     url_json = URL.replace("{user_id}", id_user)
 
-    page = 0
-    while process_page(url_json.replace("{page}", str(page)), games_dict) is not None:
-        page += 1
+    games_dict = process_pages(url_json)
+    result_dict = process_dict(games_dict)
 
-    ordered_dict = order_dict_by(games_dict, 'price')
+    ordered_dict = order_dict_by(result_dict, 'price')
     write_json(ordered_dict, filename)
