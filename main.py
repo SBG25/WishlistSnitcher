@@ -9,8 +9,6 @@ def main(argv):
     parser.add_argument('--operation', '-o', help='Operation type: CREATE, UPDATE or MERGE.')
     parser.add_argument('--id', '-i', help='Steam user id')
     parser.add_argument('--filename', '-f', help='Name of the json file.')
-    parser.add_argument('--json1', '-j1', help='Name of the json to add new entries.')
-    parser.add_argument('--json2', '-j2', help='Name of the json with the new entries.')
     parser.add_argument('--threads', '-t', help='Number or threads to use, default 10.')
 
     args = parser.parse_args()
@@ -33,10 +31,10 @@ def main(argv):
         update_json(args.filename, args.threads)
 
     if(args.operation.upper() == "MERGE"):
-        if(args.json1 == None or args.json2 == None):
-            raise Exception("--json1 and --json2 arguments must be provided in MERGE operation.")
+        if(args.id == None):
+            raise Exception("--id argument must be provided in MERGE operation.")
         else:
-            merge_json(args.json1, args.json2, args.filename)
+            merge_json(args.id, args.filename, args.threads)
 
 if __name__ == "__main__":
     start_time = time.time()
