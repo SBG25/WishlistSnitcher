@@ -1,6 +1,6 @@
-import json
 from utils import get_best_price, is_well_formed_url, write_json, order_dict_by, read_json
-import sys
+from concurrent.futures import ThreadPoolExecutor
+
 
 def process_game(game):
     well_formed = is_well_formed_url(game['url'])
@@ -11,19 +11,13 @@ def process_game(game):
         game["well_formed"] = True
         game["price"] = float(get_best_price(well_formed))
 
-def process_dict(games_dict):
-    total_games = len(games_dict.keys())
-    updated_games = 1
+def process_dict(games_dict, threads):
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        for key in games_dict.keys():
+            executor.submit(process_game, games_dict[key])
 
-    for key in games_dict.keys():
-        process_game(games_dict[key])
-
-        sys.stdout.write("\r{current}/{total}".replace("{current}", str(updated_games)).replace("{total}", str(total_games)))
-        sys.stdout.flush()
-        updated_games += 1
-
-def update_json(filename):
+def update_json(filename, threads):
     games_dict = read_json(filename)
-    process_dict(games_dict)
+    process_dict(games_dict, threads)
     ordered_dict = order_dict_by(games_dict, 'price')
     write_json(ordered_dict, filename)

@@ -1,7 +1,7 @@
 import re
 import requests
 from utils import get_best_price, is_well_formed_url, write_json, order_dict_by
-import sys
+from concurrent.futures import ThreadPoolExecutor
 
 URL = "https://store.steampowered.com/wishlist/profiles/{user_id}/wishlistdata/?p={page}"
 URL_GAME = "https://gocdkeys.com/en/buy-{game_name}-pc-cd-key"
@@ -30,20 +30,16 @@ def generate_dict_row(data, key):
 
     return name, row
 
-def process_dict(games_dict):
-    total_games = len(games_dict.keys())
-    updated_games = 1
+def update_row(games_dict, key, result_dict):
+    name, row = generate_dict_row(games_dict, key)
+    result_dict[name] = row
 
+def process_dict(games_dict, threads):
     result_dict = dict()
 
-    for key in games_dict.keys():
-        name, row = generate_dict_row(games_dict, key)
-        result_dict[name] = row
-
-        sys.stdout.write("\r{current}/{total}".replace("{current}", str(updated_games)).replace("{total}", str(total_games)))
-        sys.stdout.flush()
-        updated_games += 1
-
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        for key in games_dict.keys():
+            executor.submit(update_row, games_dict, key, result_dict)
     return result_dict
 
 def process_pages(url_json):
@@ -61,11 +57,11 @@ def process_pages(url_json):
     return games_dict
 
 
-def generate_json(id_user, filename):
+def generate_json(id_user, filename, threads):
     url_json = URL.replace("{user_id}", id_user)
 
     games_dict = process_pages(url_json)
-    result_dict = process_dict(games_dict)
+    result_dict = process_dict(games_dict, threads)
 
     ordered_dict = order_dict_by(result_dict, 'price')
     write_json(ordered_dict, filename)
