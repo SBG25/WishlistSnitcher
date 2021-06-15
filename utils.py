@@ -28,3 +28,7 @@ def write_json(games_dict, filename):
 def order_dict_by(dict_games, field):
     ordered_dict = OrderedDict(sorted(dict_games.items(), key = lambda x: (getitem(x[1], field), getitem(x[1], "well_formed"))))
     return ordered_dict
+
+def read_json(filename):
+    with open(filename) as json_file:
+        return json.load(json_file)

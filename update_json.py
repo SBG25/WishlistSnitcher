@@ -1,10 +1,6 @@
 import json
-from utils import get_best_price, is_well_formed_url, write_json, order_dict_by
+from utils import get_best_price, is_well_formed_url, write_json, order_dict_by, read_json
 import sys
-
-def read_json(filename):
-    with open(filename) as json_file:
-        return json.load(json_file)
 
 def process_game(game):
     well_formed = is_well_formed_url(game['url'])
