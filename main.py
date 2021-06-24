@@ -25,16 +25,16 @@ def main(argv):
         if(args.id == None):
             raise Exception("--id argument must be provided in CREATE operation.")
         else:
-            generate_json(args.id, args.filename, args.threads)
+            generate_json(args.id, args.filename, int(args.threads))
 
     if(args.operation.upper() == "UPDATE"):
-        update_json(args.filename, args.threads)
+        update_json(args.filename, int(args.threads))
 
     if(args.operation.upper() == "MERGE"):
         if(args.id == None):
             raise Exception("--id argument must be provided in MERGE operation.")
         else:
-            merge_json(args.id, args.filename, args.threads)
+            merge_json(args.id, args.filename, int(args.threads))
 
 if __name__ == "__main__":
     start_time = time.time()
