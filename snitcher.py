@@ -73,7 +73,10 @@ class Snitcher():
             if(new_url):
                 self.repository.add_game(name, row["url"])
             row["well_formed"] = True
-            row["price"] = float(self.get_best_price(well_formed))
+
+            store, price = self.get_best_price(well_formed)
+            row["price"] = float(price)
+            row["store"] = store
 
         return name, row
 
@@ -89,10 +92,12 @@ class Snitcher():
         try:
             soup = BeautifulSoup(page.content, 'html.parser')
             recommended = soup.find(class_="recommended")
+            store = recommended.find('img').get('title')
             price = recommended.find(itemprop="price").text.replace("€", "")
         except Exception:
+            store = None
             price = 999
-        return price
+        return store, price
 
     def normalize_name(self, name):
         name = name.replace("'", "")
